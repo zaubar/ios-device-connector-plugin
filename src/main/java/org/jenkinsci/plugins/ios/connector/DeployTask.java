@@ -45,31 +45,15 @@ class DeployTask implements Callable<Void, IOException> {
             listener.getLogger().println("Copying "+ bundle +" to "+ t);
 
             // Determine what type of file was passed
-            FilePath appDir;
-            FilePath tmpDir = new FilePath(t);
             final String filename = bundle.getName();
-            if (filename.toLowerCase().endsWith(".ipa")) {
-                listener.getLogger().println("Extracting .app from .ipa file...");
-                bundle.unzip(tmpDir);
-                FilePath payloadDir = tmpDir.child("Payload");
-                List<FilePath> payload = payloadDir.listDirectories();
-                if (payload==null || payload.isEmpty())
-                    throw new IOException("Malformed IPA file: "+bundle);
-                appDir = payload.get(0);
-            } else if (filename.toLowerCase().endsWith(".app")) {
-                appDir = tmpDir.child(filename);
-                bundle.copyRecursiveTo(appDir);
-            } else {
-                throw new IOException("Expected either a .app or .ipa bundle!");
-            }
 
             ArgumentListBuilder arguments = new ArgumentListBuilder(fruitstrap.getRemote());
-            arguments.add("--id", deviceId, "--bundle", appDir.getName());
+            arguments.add("--id", deviceId, "--bundle", filename);
 
             ProcStarter proc = new LocalLauncher(listener).launch()
                     .cmds(arguments)
                     .stdout(listener)
-                    .pwd(appDir.getParent());
+                    .pwd(bundle.getParent());
             int exit = proc.join();
             if (exit!=0)
                 throw new IOException("Deployment of "+bundle+" failed: "+exit);
