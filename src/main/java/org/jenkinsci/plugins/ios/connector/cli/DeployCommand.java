@@ -52,7 +52,7 @@ public class DeployCommand extends CLICommand {
         for (String bundle : files) {
             FilePath p = new FilePath(checkChannel(), bundle);
             listener.getLogger().println("Deploying "+ bundle);
-            dev.deploy(new File(p.getRemote()), listener);
+            dev.deploy(new File(p.getRemote()), "", listener);
         }
         return 0;
     }

@@ -9,3 +9,7 @@ f.entry(title:"Path to .ipa file(s)", field:"path") {
 f.entry(title:"Node(s) used:", field:"nodes") {
     f.textbox()
 }
+
+f.entry(title:"Uninstall Bundle(s):", field:"bundleId") {
+    f.textbox()
+}

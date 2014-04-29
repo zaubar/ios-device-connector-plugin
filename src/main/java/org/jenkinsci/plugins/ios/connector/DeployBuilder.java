@@ -21,7 +21,7 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class DeployBuilder extends Builder {
-    public final String udid;
+    public final String bundleId;
     public final String path;
     public final String nodes;
 
@@ -29,9 +29,9 @@ public class DeployBuilder extends Builder {
     private transient iOSDeviceList devices;
 
     @DataBoundConstructor
-    public DeployBuilder(String path,String udid,String nodes) {
+    public DeployBuilder(String path,String bundleId,String nodes) {
         this.path = path;
-        this.udid = udid;
+        this.bundleId = bundleId;
         this.nodes = nodes;
     }
 
@@ -41,7 +41,7 @@ public class DeployBuilder extends Builder {
 
         // Expand matrix and build variables in the device ID and command line args
         final String expandPath = expandVariables(build, listener, path);
-        
+        final String expandBundle = expandVariables(build, listener, bundleId);
         final String expandNodes = expandVariables(build, listener, nodes);
         List<String> nodeList = getRestrictedNodes(expandNodes, listener);
         
@@ -68,7 +68,7 @@ public class DeployBuilder extends Builder {
                 listener.getLogger().printf("Path: %s%n", expandPath);
                 listener.getLogger().printf("Device: %s%n", device.getDisplayName());
 
-                deployApps(files, device, listener);
+                deployApps(files, expandBundle, device, listener);
             } else {
                 listener.getLogger().printf("Skipping deployment to: %s%n", node);
             }
@@ -105,7 +105,7 @@ public class DeployBuilder extends Builder {
         return ws.child(expandPath).exists() ? new FilePath[]{ws.child(expandPath)} : ws.list(expandPath);
     }
     
-    private static void deployApps(FilePath[] files, iOSDevice device, BuildListener listener) throws IOException, InterruptedException {
+    private static void deployApps(FilePath[] files, String bundleId, iOSDevice device, BuildListener listener) throws IOException, InterruptedException {
         for (FilePath bundle : files) {
             String name = bundle.getName();
             int idx = name.lastIndexOf('.');
@@ -114,8 +114,9 @@ public class DeployBuilder extends Builder {
                 continue;
             }
 
+            
             listener.getLogger().printf("Deploying iOS app: %s%n", name);
-            device.deploy(new File(bundle.getRemote()), listener);
+            device.deploy(new File(bundle.getRemote()), bundleId, listener);
         }
     }
 

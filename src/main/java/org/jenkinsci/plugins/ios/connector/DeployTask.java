@@ -24,12 +24,14 @@ class DeployTask implements Callable<Void, IOException> {
     private final TaskListener listener;
     private final String deviceId;
     private final FilePath rootPath;
+    private final String bundleId;
 
-    DeployTask(iOSDevice device, File bundle, TaskListener listener) {
+    DeployTask(iOSDevice device, String bid, File bundle, TaskListener listener) {
         this.bundle = new FilePath(bundle);
         this.listener = listener;
         this.deviceId = device.getUniqueDeviceId();
         this.rootPath = device.getComputer().getNode().getRootPath();
+        this.bundleId = bid;
     }
 
     public Void call() throws IOException {
@@ -46,9 +48,26 @@ class DeployTask implements Callable<Void, IOException> {
 
             // Determine what type of file was passed
             final String filename = bundle.getName();
-
+            //fruitstrap uninstall --id $DEVICE --bundle $APP_ID
+            if(bundleId != null && !bundleId.isEmpty()) {
+                listener.getLogger().printf("3 Uninstall Bundle: %s%n", bundleId);
+                String[] ids = bundleId.split(" ");
+                for(String i : ids)
+                {
+                    ArgumentListBuilder arguments = new ArgumentListBuilder(fruitstrap.getRemote());
+                    arguments.add("uninstall","--id", deviceId, "--bundle", i);
+                    ProcStarter proc = new LocalLauncher(listener).launch()
+                        .cmds(arguments)
+                        .stdout(listener)
+                        .pwd(bundle.getParent());
+                    int exit = proc.join();
+                    if (exit!=0)
+                        throw new IOException("Uninstall  of " + i + " failed: " + exit);    
+                }
+            }
+            
             ArgumentListBuilder arguments = new ArgumentListBuilder(fruitstrap.getRemote());
-            arguments.add("--id", deviceId, "--bundle", filename);
+            arguments.add("install","--id", deviceId, "--bundle", filename);
 
             ProcStarter proc = new LocalLauncher(listener).launch()
                     .cmds(arguments)
