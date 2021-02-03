@@ -24,12 +24,14 @@ class DeployTask implements Callable<Void, IOException> {
     private final TaskListener listener;
     private final String deviceId;
     private final FilePath rootPath;
+    private final String bundleId;
 
-    DeployTask(iOSDevice device, File bundle, TaskListener listener) {
+    DeployTask(iOSDevice device, String bid, File bundle, TaskListener listener) {
         this.bundle = new FilePath(bundle);
         this.listener = listener;
         this.deviceId = device.getUniqueDeviceId();
         this.rootPath = device.getComputer().getNode().getRootPath();
+        this.bundleId = bid;
     }
 
     public Void call() throws IOException {
@@ -45,31 +47,32 @@ class DeployTask implements Callable<Void, IOException> {
             listener.getLogger().println("Copying "+ bundle +" to "+ t);
 
             // Determine what type of file was passed
-            FilePath appDir;
-            FilePath tmpDir = new FilePath(t);
             final String filename = bundle.getName();
-            if (filename.toLowerCase().endsWith(".ipa")) {
-                listener.getLogger().println("Extracting .app from .ipa file...");
-                bundle.unzip(tmpDir);
-                FilePath payloadDir = tmpDir.child("Payload");
-                List<FilePath> payload = payloadDir.listDirectories();
-                if (payload==null || payload.isEmpty())
-                    throw new IOException("Malformed IPA file: "+bundle);
-                appDir = payload.get(0);
-            } else if (filename.toLowerCase().endsWith(".app")) {
-                appDir = tmpDir.child(filename);
-                bundle.copyRecursiveTo(appDir);
-            } else {
-                throw new IOException("Expected either a .app or .ipa bundle!");
+            //fruitstrap uninstall --id $DEVICE --bundle $APP_ID
+            if(bundleId != null && !bundleId.isEmpty()) {
+                listener.getLogger().printf("3 Uninstall Bundle: %s%n", bundleId);
+                String[] ids = bundleId.split(" ");
+                for(String i : ids)
+                {
+                    ArgumentListBuilder arguments = new ArgumentListBuilder(fruitstrap.getRemote());
+                    arguments.add("uninstall","--id", deviceId, "--bundle", i);
+                    ProcStarter proc = new LocalLauncher(listener).launch()
+                        .cmds(arguments)
+                        .stdout(listener)
+                        .pwd(bundle.getParent());
+                    int exit = proc.join();
+                    if (exit!=0)
+                        throw new IOException("Uninstall  of " + i + " failed: " + exit);    
+                }
             }
-
+            
             ArgumentListBuilder arguments = new ArgumentListBuilder(fruitstrap.getRemote());
-            arguments.add("--id", deviceId, "--bundle", appDir.getName());
+            arguments.add("install","--id", deviceId, "--bundle", filename);
 
             ProcStarter proc = new LocalLauncher(listener).launch()
                     .cmds(arguments)
                     .stdout(listener)
-                    .pwd(appDir.getParent());
+                    .pwd(bundle.getParent());
             int exit = proc.join();
             if (exit!=0)
                 throw new IOException("Deployment of "+bundle+" failed: "+exit);

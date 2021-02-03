@@ -2,9 +2,14 @@ package org.jenkinsci.plugins.ios.connector.DeployBuilder
 
 def f = namespace(lib.FormTagLib)
 
-f.entry(title:"Path to .ipa/app file(s)", field:"path") {
+f.entry(title:"Path to .ipa file(s)", field:"path") {
     f.textbox()
 }
-f.entry(title:"Device", field:"udid") {
+
+f.entry(title:"Node(s) used:", field:"nodes") {
+    f.textbox()
+}
+
+f.entry(title:"Uninstall Bundle(s):", field:"bundleId") {
     f.textbox()
 }
