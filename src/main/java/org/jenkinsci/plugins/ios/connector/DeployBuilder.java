@@ -68,7 +68,11 @@ public class DeployBuilder extends Builder {
                 listener.getLogger().printf("Path: %s%n", expandPath);
                 listener.getLogger().printf("Device: %s%n", device.getDisplayName());
 
-                deployApps(files, expandBundle, device, listener);
+				try {
+                    deployApps(files, expandBundle, device, listener);
+				} catch (IOException e) {
+                    listener.getLogger().printf("Error while deploying %s%n", e.toString());
+				}
             } else {
                 listener.getLogger().printf("Skipping deployment to: %s%n", node);
             }
