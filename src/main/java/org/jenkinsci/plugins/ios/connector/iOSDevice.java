@@ -66,7 +66,7 @@ public class iOSDevice implements Serializable, ModelObject {
     public String getProductTypeDisplayName() {
         String name = props.getProperty(PROP_PRODUCT_TYPE);
         for (int i=0; i<PRODUCT_TYPE_MAP.length; i+=2) {
-            if (name.startsWith(PRODUCT_TYPE_MAP[i]))
+            if (name != null && name.startsWith(PRODUCT_TYPE_MAP[i]))
                 return PRODUCT_TYPE_MAP[i+1];
         }
         return name; // unmapped

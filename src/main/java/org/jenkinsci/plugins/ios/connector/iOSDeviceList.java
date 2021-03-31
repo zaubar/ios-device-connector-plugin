@@ -191,24 +191,30 @@ public class iOSDeviceList implements RootAction, ModelObject {
         private List<iOSDevice> parseOutput(PrintStream logger, ByteArrayOutputStream out) throws IOException {
             List<iOSDevice> r = newArrayList();
 
-            {// parse the output
-                Properties p = new Properties();
-                String line;
-                BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(out.toByteArray()),"UTF-8"));
-                while ((line=in.readLine())!=null) {
-                    if (line.length()==0) {
-                        r.add(new iOSDevice(p));
-                        p.clear();
-                        continue;
-                    }
-                    int idx = line.indexOf('=');
-                    if (idx<0) {
-                        logger.println("Invalid output line:"+line);
-                        logger.write(out.toByteArray());
-                        logger.println();
-                        return Collections.emptyList();
-                    }
-                    p.put(line.substring(0,idx),line.substring(idx+1));
+            // parse the output
+            Properties p = new Properties();
+            r.add(new iOSDevice(p));
+            String line;
+            BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(out.toByteArray()),"UTF-8"));
+            while ((line = in.readLine()) != null) {
+                if (line.length()==0) {
+                    r.add(new iOSDevice(p));
+                    p.clear();
+                    continue;
+                }
+                int idx = line.indexOf('=');
+                if (idx<0) {
+                    logger.println("Invalid output line:"+line);
+                    logger.write(out.toByteArray());
+                    logger.println();
+                    continue;
+                }
+                else if (idx+1 < line.length()) {
+                    //if (line.contains("ProductType") || line.contains("UniqueDeviceID") || line.contains("DeviceName")) { 
+                        System.out.println(line);
+                        p.put(line.substring(0,idx),line.substring(idx+1));
+                    //}
+                    continue;
                 }
             }
 

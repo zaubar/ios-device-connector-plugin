@@ -1,37 +1,65 @@
-/* ----------------------------------------------------------------------------
- *   MobileDevice.h - interface to MobileDevice.framework 
- *   $LastChangedDate: 2007-07-09 18:59:29 -0700 (Mon, 09 Jul 2007) $
+/* ex:set ts=4 sw=4: <- for vi
  *
- * Copied from http://iphonesvn.halifrag.com/svn/iPhone/
- * With modifications from Allen Porter and Scott Turner
+ * IPod.h
  *
- * ------------------------------------------------------------------------- */
-
-#ifndef MOBILEDEVICE_H
-#define MOBILEDEVICE_H
+ * This is based on information extracted from around the Internet, by people
+ * who wanted to look a lot further under the covers than I did.  I've deliberately
+ * pushed all Apple's datatypes back to being opaque, since there is nothing
+ * to be gained by looking inside them, and everything to lose.
+ *
+ * This file doesn't contain any of the 'recovery-mode' or other 'jailbreak-related' stuff
+ *
+ * http://iphonesvn.halifrag.com/svn/iPhone/
+ * http://www.theiphonewiki.com/wiki/index.php?title=MobileDevice_Library#MobileDevice_Header_.28mobiledevice.h.29
+ * http://code.google.com/p/iphonebrowser/issues/detail?id=52
+ * http://www.koders.com/csharp/fidE79340F4674D47FFF3EFB6F949A1589D942798F3.aspx
+ *
+ * As far as I'm concerned, this header is in the Public Domain.
+ */
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/*
+ * its critical that we spell out all integer sizes, for the entry points
+ * and data structures in the external DLL/framework that we have no
+ * control over.
+ */
+#include <stdint.h>
+
+#ifndef __GNUC__
+#pragma pack
+#define __PACK
+#else
+#define __PACK __attribute__((__packed__))
+#endif
+
 #if defined(WIN32)
-#include <CoreFoundation.h>
-typedef unsigned int mach_error_t;
+#	define __DLLIMPORT [DllImport("iTunesMobileDevice.dll")]
+	using namespace System::Runtime::InteropServices;
+#	include <CoreFoundation.h>
+	typedef unsigned int mach_error_t;
 #elif defined(__APPLE__)
-#include <CoreFoundation/CoreFoundation.h>
-#include <mach/error.h>
-#endif	
+#	define __DLLIMPORT
+#	include <CoreFoundation/CoreFoundation.h>
+#	include <mach/error.h>
+#endif
 
 /* Error codes */
-#define MDERR_APPLE_MOBILE  (err_system(0x3a))
-#define MDERR_IPHONE        (err_sub(0))
+#define MDERR_APPLE_MOBILE		(err_system(0x3a))
+#define MDERR_IPHONE			(err_sub(0))
+
+#define ERR_MOBILE_DEVICE 0
 
 /* Apple Mobile (AM*) errors */
-#define MDERR_OK                ERR_SUCCESS
+#define MDERR_OK                ERR_SUCCESS // 0
 #define MDERR_SYSCALL           (ERR_MOBILE_DEVICE | 0x01)
 #define MDERR_OUT_OF_MEMORY     (ERR_MOBILE_DEVICE | 0x03)
-#define MDERR_QUERY_FAILED      (ERR_MOBILE_DEVICE | 0x04) 
+#define MDERR_QUERY_FAILED      (ERR_MOBILE_DEVICE | 0x04)
 #define MDERR_INVALID_ARGUMENT  (ERR_MOBILE_DEVICE | 0x0b)
+#define MDERR_NO_SUCH_SERVICE   (ERR_MOBILE_DEVICE | 0x22)
 #define MDERR_DICT_NOT_LOADED   (ERR_MOBILE_DEVICE | 0x25)
 
 /* Apple File Connection (AFC*) errors */
@@ -41,149 +69,79 @@ typedef unsigned int mach_error_t;
 #define MDERR_USBMUX_ARG_NULL   0x16
 #define MDERR_USBMUX_FAILED     0xffffffff
 
-/* Messages passed to device notification callbacks: passed as part of
- * am_device_notification_callback_info. */
-#define ADNCI_MSG_CONNECTED     1
-#define ADNCI_MSG_DISCONNECTED  2
-#define ADNCI_MSG_UNKNOWN       3
-
 #define AMD_IPHONE_PRODUCT_ID   0x1290
-#define AMD_IPHONE_SERIAL       "3391002d9c804d105e2c8c7d94fc35b6f3d214a3"
 
 /* Services, found in /System/Library/Lockdown/Services.plist */
-#define AMSVC_AFC                   CFSTR("com.apple.afc")
-#define AMSVC_BACKUP                CFSTR("com.apple.mobilebackup")
-#define AMSVC_CRASH_REPORT_COPY     CFSTR("com.apple.crashreportcopy")
-#define AMSVC_DEBUG_IMAGE_MOUNT     CFSTR("com.apple.mobile.debug_image_mount")
-#define AMSVC_NOTIFICATION_PROXY    CFSTR("com.apple.mobile.notification_proxy")
-#define AMSVC_PURPLE_TEST           CFSTR("com.apple.purpletestr")
-#define AMSVC_SOFTWARE_UPDATE       CFSTR("com.apple.mobile.software_update")
-#define AMSVC_SYNC                  CFSTR("com.apple.mobilesync")
-#define AMSVC_SCREENSHOT            CFSTR("com.apple.screenshotr")
-#define AMSVC_SYSLOG_RELAY          CFSTR("com.apple.syslog_relay")
-#define AMSVC_SYSTEM_PROFILER       CFSTR("com.apple.mobile.system_profiler")
+#define AMSVC_AFC                   "com.apple.afc"
+#define AMSVC_AFC2                  "com.apple.afc2"
+#define AMSVC_BACKUP                "com.apple.mobilebackup"
+#define AMSVC_CRASH_REPORT_COPY     "com.apple.crashreportcopy"
+#define AMSVC_DEBUG_IMAGE_MOUNT     "com.apple.mobile.debug_image_mount"
+#define AMSVC_NOTIFICATION_PROXY    "com.apple.mobile.notification_proxy"
+#define AMSVC_PURPLE_TEST           "com.apple.purpletestr"
+#define AMSVC_SOFTWARE_UPDATE       "com.apple.mobile.software_update"
+#define AMSVC_SYNC                  "com.apple.mobilesync"
+#define AMSVC_SCREENSHOT            "com.apple.screenshotr"
+#define AMSVC_SYSLOG_RELAY          "com.apple.syslog_relay"
+#define AMSVC_SYSTEM_PROFILER       "com.apple.mobile.system_profiler"
+#define AMSVC_FILE_RELAY            "com.apple.mobile.file_relay"
+#define AMSVC_WEB_INSPECTOR         "com.apple.webinspector"
 
-typedef unsigned int afc_error_t;
-typedef unsigned int usbmux_error_t;
-typedef unsigned int service_conn_t;
+typedef uint32_t afc_error_t;
+typedef uint64_t afc_file_ref;
+typedef uint32_t service_conn_t;
 
-struct am_recovery_device;
+/* opaque structures */
+typedef struct _am_device				*am_device;
+typedef struct _am_service				*am_service;
+typedef struct _afc_connection			*afc_connection;
+typedef struct _am_device_notification	*am_device_notification;
+typedef struct _afc_directory			*afc_directory;
+typedef struct _afc_dictionary			*afc_dictionary;
 
-typedef struct am_device_notification_callback_info {
-    struct am_device *dev;  /* 0    device */ 
-    unsigned int msg;       /* 4    one of ADNCI_MSG_* */
-} __attribute__ ((packed)) am_device_notification_callback_info;
+/* Messages passed to device notification callbacks: passed as part of
+ * am_device_notification_callback_info. */
+typedef enum {
+	ADNCI_MSG_CONNECTED     = 1,
+	ADNCI_MSG_DISCONNECTED  = 2,
+	ADNCI_MSG_UNKNOWN       = 3
+} adnci_msg;
 
-/* The type of the device restore notification callback functions.
- * TODO: change to correct type. */
-typedef void (*am_restore_device_notification_callback)(struct
-    am_recovery_device *);
-
-/* This is a CoreFoundation object of class AMRecoveryModeDevice. */
-typedef struct am_recovery_device {
-    unsigned char unknown0[8];                          /* 0 */
-    am_restore_device_notification_callback callback;   /* 8 */
-    void *user_info;                                    /* 12 */
-    unsigned char unknown1[12];                         /* 16 */
-    unsigned int readwrite_pipe;                        /* 28 */
-    unsigned char read_pipe;                            /* 32 */
-    unsigned char write_ctrl_pipe;                      /* 33 */
-    unsigned char read_unknown_pipe;                    /* 34 */
-    unsigned char write_file_pipe;                      /* 35 */
-    unsigned char write_input_pipe;                     /* 36 */
-} __attribute__ ((packed)) am_recovery_device;
-
-/* A CoreFoundation object of class AMRestoreModeDevice. */
-typedef struct am_restore_device {
-    unsigned char unknown[32];
-    int port;
-} __attribute__ ((packed)) am_restore_device;
+struct am_device_notification_callback_info {
+	am_device	dev;				/* 0    device */
+	uint32_t	msg;				/* 4    one of adnci_msg */
+}  __PACK;
 
 /* The type of the device notification callback function. */
-typedef void(*am_device_notification_callback)(struct
-    am_device_notification_callback_info *, void* arg);
-
-/* The type of the _AMDDeviceAttached function.
- * TODO: change to correct type. */
-typedef void *amd_device_attached_callback;
-
- 
-typedef struct am_device {
-    unsigned char unknown0[16]; /* 0 - zero */
-    unsigned int device_id;     /* 16 */
-    unsigned int product_id;    /* 20 - set to AMD_IPHONE_PRODUCT_ID */
-    char *serial;               /* 24 - set to AMD_IPHONE_SERIAL */
-    unsigned int unknown1;      /* 28 */
-    unsigned char unknown2[4];  /* 32 */
-    unsigned int lockdown_conn; /* 36 */
-    unsigned char unknown3[8];  /* 40 */
-} __attribute__ ((packed)) am_device;
-
-typedef struct am_device_notification {
-    unsigned int unknown0;                      /* 0 */
-    unsigned int unknown1;                      /* 4 */
-    unsigned int unknown2;                      /* 8 */
-    am_device_notification_callback callback;   /* 12 */ 
-    unsigned int unknown3;                      /* 16 */
-} __attribute__ ((packed)) am_device_notification;
-
-typedef struct afc_connection {
-    unsigned int handle;            /* 0 */
-    unsigned int unknown0;          /* 4 */
-    unsigned char unknown1;         /* 8 */
-    unsigned char padding[3];       /* 9 */
-    unsigned int unknown2;          /* 12 */
-    unsigned int unknown3;          /* 16 */
-    unsigned int unknown4;          /* 20 */
-    unsigned int fs_block_size;     /* 24 */
-    unsigned int sock_block_size;   /* 28: always 0x3c */
-    unsigned int io_timeout;        /* 32: from AFCConnectionOpen, usu. 0 */
-    void *afc_lock;                 /* 36 */
-    unsigned int context;           /* 40 */
-} __attribute__ ((packed)) afc_connection;
-
-typedef struct afc_directory {
-    unsigned char unknown[0];   /* size unknown */
-} __attribute__ ((packed)) afc_directory;
-
-typedef struct afc_dictionary {
-    unsigned char unknown[0];   /* size unknown */
-} __attribute__ ((packed)) afc_dictionary;
-
-typedef unsigned long long afc_file_ref;
-
-typedef struct usbmux_listener_1 {                  /* offset   value in iTunes */
-    unsigned int unknown0;                  /* 0        1 */
-    unsigned char *unknown1;                /* 4        ptr, maybe device? */
-    amd_device_attached_callback callback;  /* 8        _AMDDeviceAttached */
-    unsigned int unknown3;                  /* 12 */
-    unsigned int unknown4;                  /* 16 */
-    unsigned int unknown5;                  /* 20 */
-} __attribute__ ((packed)) usbmux_listener_1;
-
-typedef struct usbmux_listener_2 {
-    unsigned char unknown0[4144];
-} __attribute__ ((packed)) usbmux_listener_2;
-
-typedef struct am_bootloader_control_packet {
-    unsigned char opcode;       /* 0 */
-    unsigned char length;       /* 1 */
-    unsigned char magic[2];     /* 2: 0x34, 0x12 */
-    unsigned char payload[0];   /* 4 */
-} __attribute__ ((packed)) am_bootloader_control_packet;
+typedef void (*am_device_notification_callback)(
+	struct am_device_notification_callback_info *,
+	void* callback_data);
 
 /* ----------------------------------------------------------------------------
  *   Public routines
  * ------------------------------------------------------------------------- */
 
-void AMDSetLogLevel(int level);
+mach_error_t AMDeviceSecureTransferPath(
+	uint32_t unknown0,
+	am_device device,
+	CFURLRef url,
+	CFDictionaryRef options,
+	void* callback,
+	int callback_arg);
 
-/*  Registers a notification with the current run loop. The callback gets
- *  copied into the notification struct, as well as being registered with the
- *  current run loop. dn_unknown3 gets copied into unknown3 in the same.
- *  (Maybe dn_unknown3 is a user info parameter that gets passed as an arg to
- *  the callback?) unused0 and unused1 are both 0 when iTunes calls this.
- *  In iTunes the callback is located from $3db78e-$3dbbaf.
+mach_error_t AMDeviceSecureInstallApplication(
+	uint32_t unknown0,
+	am_device device,
+	CFURLRef url,
+	CFDictionaryRef options,
+	void* callback,
+	int callback_arg);
+
+/* Registers a notification with the current run loop. The callback gets
+ * copied into the notification struct, as well as being registered with the
+ * current run loop. callback_data gets passed to the callback in addition
+ * to the info block.
+ * unused0 and unused1 are both 0 when iTunes calls this.
  *
  *  Returns:
  *      MDERR_OK            if successful
@@ -191,9 +149,20 @@ void AMDSetLogLevel(int level);
  *      MDERR_OUT_OF_MEMORY if we ran out of memory
  */
 
-mach_error_t AMDeviceNotificationSubscribe(am_device_notification_callback
-    callback, unsigned int unused0, unsigned int unused1, void* //unsigned int
-    dn_unknown3, struct am_device_notification **notification);
+mach_error_t AMDeviceNotificationSubscribe(
+	am_device_notification_callback callback,
+	uint32_t unused0,
+	uint32_t unused1,
+	void *callback_data,
+	am_device_notification *notification);
+
+/*
+ * Unregisters notifications. Buggy (iTunes 8.2): if you subscribe, unsubscribe and subscribe again, arriving
+           notifications will contain cookie and subscription from 1st call to subscribe, not the 2nd one. iTunes
+           calls this function only once on exit.
+        */
+mach_error_t AMDeviceNotificationUnsubscribe(
+	am_device_notification subscription);
 
 /*  Connects to the iPhone. Pass in the am_device structure that the
  *  notification callback will give to you.
@@ -205,7 +174,8 @@ mach_error_t AMDeviceNotificationSubscribe(am_device_notification_callback
  *      MDERR_INVALID_ARGUMENT  if USBMuxConnectByPort returned 0xffffffff
  */
 
-mach_error_t AMDeviceConnect(struct am_device *device);
+mach_error_t AMDeviceConnect(
+	am_device device);
 
 /*  Calls PairingRecordPath() on the given device, than tests whether the path
  *  which that function returns exists. During the initial connect, the path
@@ -216,7 +186,10 @@ mach_error_t AMDeviceConnect(struct am_device *device);
  *      1   if it did
  */
 
-int AMDeviceIsPaired(struct am_device *device);
+mach_error_t AMDeviceIsPaired(
+	am_device device);
+
+mach_error_t AMDevicePair(am_device device);
 
 /*  iTunes calls this function immediately after testing whether the device is
  *  paired. It creates a pairing file and establishes a Lockdown connection.
@@ -227,7 +200,8 @@ int AMDeviceIsPaired(struct am_device *device);
  *      MDERR_DICT_NOT_LOADED   if the load_dict() call failed
  */
 
-mach_error_t AMDeviceValidatePairing(struct am_device *device);
+mach_error_t AMDeviceValidatePairing(
+	am_device device);
 
 /*  Creates a Lockdown session and adjusts the device structure appropriately
  *  to indicate that the session has been started. iTunes calls this function
@@ -239,11 +213,12 @@ mach_error_t AMDeviceValidatePairing(struct am_device *device);
  *      MDERR_DICT_NOT_LOADED   if the load_dict() call failed
  */
 
-mach_error_t AMDeviceStartSession(struct am_device *device);
+mach_error_t AMDeviceStartSession(
+	am_device device);
 
 /* Starts a service and returns a handle that can be used in order to further
  * access the service. You should stop the session and disconnect before using
- * the service. iTunes calls this function after starting a session. It starts 
+ * the service. iTunes calls this function after starting a session. It starts
  * the service and the SSL connection. unknown may safely be
  * NULL (it is when iTunes calls this), but if it is not, then it will be
  * filled upon function exit. service_name should be one of the AMSVC_*
@@ -256,11 +231,11 @@ mach_error_t AMDeviceStartSession(struct am_device *device);
  *      MDERR_INVALID_ARGUMENT  if the Lockdown conn has not been established
  */
 
-mach_error_t AMDeviceStartService(struct am_device *device, CFStringRef 
-    service_name, service_conn_t *handle, unsigned int *
-    unknown);
-
-mach_error_t AMDeviceStartHouseArrestService(struct am_device *device, CFStringRef identifier, void *unknown, service_conn_t *handle, unsigned int *what);
+mach_error_t AMDeviceStartService(
+	am_device device,
+	CFStringRef service_name,
+	service_conn_t *handle,
+	uint32_t *unknown);
 
 /* Stops a session. You should do this before accessing services.
  *
@@ -269,7 +244,8 @@ mach_error_t AMDeviceStartHouseArrestService(struct am_device *device, CFStringR
  *      MDERR_INVALID_ARGUMENT  if the Lockdown conn has not been established
  */
 
-mach_error_t AMDeviceStopSession(struct am_device *device);
+mach_error_t AMDeviceStopSession(
+	am_device device);
 
 /* Opens an Apple File Connection. You must start the appropriate service
  * first with AMDeviceStartService(). In iTunes, io_timeout is 0.
@@ -279,18 +255,27 @@ mach_error_t AMDeviceStopSession(struct am_device *device);
  *      MDERR_AFC_OUT_OF_MEMORY if malloc() failed
  */
 
-afc_error_t AFCConnectionOpen(service_conn_t handle, unsigned int io_timeout,
-    struct afc_connection **conn);
+afc_error_t AFCDirectoryAccessOpen(
+	am_service handle,
+	uint32_t io_timeout,
+    afc_connection *conn);
 
-/* Pass in a pointer to an afc_device_info structure. It will be filled. */
-afc_error_t AFCDeviceInfoOpen(afc_connection *conn, struct
-    afc_dictionary **info);
+/* Retrieves an afc_dictionary that describes the connected device.  To
+ * extract values from the dictionary, use AFCKeyValueRead() and close
+ * it when finished with AFCKeyValueClose()
+ */
+afc_error_t AFCDeviceInfoOpen(
+	afc_connection conn,
+	afc_dictionary *info);
 
 /* Turns debug mode on if the environment variable AFCDEBUG is set to a numeric
  * value, or if the file '/AFCDEBUG' is present and contains a value. */
 void AFCPlatformInit();
 
-/* Opens a directory on the iPhone. Pass in a pointer in dir to be filled in.
+/* Opens a directory on the iPhone. Retrieves an afc_directory which can be
+ * queried (with AFCDirectoryRead()) to enumerate through the filenames in
+ * the directory.  Once finished, close with AFCDirectoryClose()
+ *
  * Note that this normally only accesses the iTunes sandbox/partition as the
  * root, which is /var/root/Media. Pathnames are specified with '/' delimiters
  * as in Unix style.
@@ -299,8 +284,10 @@ void AFCPlatformInit();
  *      MDERR_OK                if successful
  */
 
-afc_error_t AFCDirectoryOpen(afc_connection *conn, const char *path,
-                             struct afc_directory **dir);
+afc_error_t AFCDirectoryOpen(
+	afc_connection conn,
+	const char *path,
+	afc_directory *dir);
 
 /* Acquires the next entry in a directory previously opened with
  * AFCDirectoryOpen(). When dirent is filled with a NULL value, then the end
@@ -312,178 +299,200 @@ afc_error_t AFCDirectoryOpen(afc_connection *conn, const char *path,
  *      MDERR_OK                if successful, even if no entries remain
  */
 
-afc_error_t AFCDirectoryRead(afc_connection *conn/*unsigned int unused*/, struct afc_directory *dir,
+afc_error_t AFCDirectoryRead(
+	afc_connection conn,
+	afc_directory dir,
     char **dirent);
 
-afc_error_t AFCDirectoryClose(afc_connection *conn, struct afc_directory *dir);
-afc_error_t AFCDirectoryCreate(afc_connection *conn, const char *dirname);
-afc_error_t AFCRemovePath(afc_connection *conn, const char *dirname);
-afc_error_t AFCRenamePath(afc_connection *conn, const char *from, const char *to);
-afc_error_t AFCLinkPath(afc_connection *conn, long long int linktype, const char *target, const char *linkname);
+/* Close the directory previously opened with AFCDirectoryOpen()
+ */
+afc_error_t AFCDirectoryClose(
+	afc_connection conn,
+	afc_directory dir);
+
+/* Create a new directory on the device.
+ */
+afc_error_t AFCDirectoryCreate(
+	afc_connection conn,
+	const char *dirname);
+
+/* Removes an existing file or directory from the device.
+ */
+afc_error_t AFCRemovePath(
+	afc_connection conn,
+	const char *dirname);
+
+/* Renames an existing file or directory on the device */
+afc_error_t AFCRenamePath(
+	afc_connection conn,
+	const char *from,
+	const char *to);
 
 /* Returns the context field of the given AFC connection. */
-unsigned int AFCConnectionGetContext(afc_connection *conn);
+uint32_t AFCDirectoryAccessGetContext(
+	afc_connection conn);
+
+/* Set the context field of the given AFC connection.
+ */
+uint32_t AFCDirectoryAccessSetContext(
+	afc_connection conn,
+	uint32_t ctx);
 
 /* Returns the fs_block_size field of the given AFC connection. */
-unsigned int AFCConnectionGetFSBlockSize(afc_connection *conn);
+uint32_t AFCDirectoryAccessGetFSBlockSize(
+	afc_connection conn);
 
-/* Returns the io_timeout field of the given AFC connection. In iTunes this is
- * 0. */
-unsigned int AFCConnectionGetIOTimeout(afc_connection *conn);
+/* Returns the io_timeout field of the given AFC connection. In iTunes this is 0. */
+uint32_t AFCDirectoryAccessGetIOTimeout(
+	afc_connection conn);
+
+uint32_t AFCDirectoryAccessSetIOTimeout(
+	afc_connection conn,
+	uint32_t timeout);
 
 /* Returns the sock_block_size field of the given AFC connection. */
-unsigned int AFCConnectionGetSocketBlockSize(afc_connection *conn);
+uint32_t AFCDirectoryAccessGetSocketBlockSize(
+	afc_connection conn);
 
 /* Closes the given AFC connection. */
-afc_error_t AFCConnectionClose(afc_connection *conn);
-
-/* Registers for device notifications related to the restore process. unknown0
- * is zero when iTunes calls this. In iTunes,
- * the callbacks are located at:
- *      1: $3ac68e-$3ac6b1, calls $3ac542(unknown1, arg, 0)
- *      2: $3ac66a-$3ac68d, calls $3ac542(unknown1, 0, arg)
- *      3: $3ac762-$3ac785, calls $3ac6b2(unknown1, arg, 0)
- *      4: $3ac73e-$3ac761, calls $3ac6b2(unknown1, 0, arg)
- */
-
-unsigned int AMRestoreRegisterForDeviceNotifications(
-    am_restore_device_notification_callback dfu_connect_callback,
-    am_restore_device_notification_callback recovery_connect_callback,
-    am_restore_device_notification_callback dfu_disconnect_callback,
-    am_restore_device_notification_callback recovery_disconnect_callback,
-    unsigned int unknown0,
-    void *user_info);
-
-/* Causes the restore functions to spit out (unhelpful) progress messages to
- * the file specified by the given path. iTunes always calls this right before
- * restoring with a path of
- * "$HOME/Library/Logs/iPhone Updater Logs/iPhoneUpdater X.log", where X is an
- * unused number.
- */
-
-unsigned int AMRestoreEnableFileLogging(char *path);
-
-/* Initializes a new option dictionary to default values. Pass the constant
- * kCFAllocatorDefault as the allocator. The option dictionary looks as
- * follows:
- * {
- *      NORImageType => 'production',
- *      AutoBootDelay => 0,
- *      KernelCacheType => 'Release',
- *      UpdateBaseband => true,
- *      DFUFileType => 'RELEASE',
- *      SystemImageType => 'User',
- *      CreateFilesystemPartitions => true,
- *      FlashNOR => true,
- *      RestoreBootArgs => 'rd=md0 nand-enable-reformat=1 -progress'
- *      BootImageType => 'User'
- *  }
- *
- * Returns:
- *      the option dictionary   if successful
- *      NULL                    if out of memory
- */ 
-
-CFMutableDictionaryRef AMRestoreCreateDefaultOptions(CFAllocatorRef allocator);
+afc_error_t AFCDirectoryAccessClose(
+	afc_connection conn);
 
 /* ----------------------------------------------------------------------------
  *   Less-documented public routines
  * ------------------------------------------------------------------------- */
 
-/* mode 2 = read, mode 3 = write */
-afc_error_t AFCFileRefOpen(afc_connection *conn, const char *path,
-    unsigned long long mode, afc_file_ref *ref);
-afc_error_t AFCFileRefSeek(afc_connection *conn, afc_file_ref ref,
-    unsigned long long offset1, unsigned long long offset2);
-afc_error_t AFCFileRefRead(afc_connection *conn, afc_file_ref ref,
-    void *buf, unsigned int *len);
-afc_error_t AFCFileRefSetFileSize(afc_connection *conn, afc_file_ref ref,
-    unsigned long long offset);
-afc_error_t AFCFileRefWrite(afc_connection *conn, afc_file_ref ref,
-    const void *buf, unsigned int len);
-afc_error_t AFCFileRefClose(afc_connection *conn, afc_file_ref ref);
+afc_error_t AFCFileRefOpen(
+	afc_connection conn,
+	const char *path,				/* pathname of file to open */
+    uint64_t mode,					/* 1=read, 2=write, 3=read/write */
+	afc_file_ref *ref);
 
-afc_error_t AFCFileInfoOpen(afc_connection *conn, const char *path, struct
-    afc_dictionary **info);
-afc_error_t AFCKeyValueRead(struct afc_dictionary *dict, char **key, char **
-    val);
-afc_error_t AFCKeyValueClose(struct afc_dictionary *dict);
+afc_error_t AFCFileRefSeek(
+	afc_connection conn,
+	afc_file_ref ref,
+	int64_t offset,				/* signed offset from pos */
+	uint64_t pos);				/* 0=SEEK_SET, 1=SEEK_CUR, 2=SEEK_END */
 
-unsigned int AMRestorePerformRecoveryModeRestore(struct am_recovery_device *
-    rdev, CFDictionaryRef opts, void *callback, void *user_info);
-unsigned int AMRestorePerformRestoreModeRestore(struct am_restore_device *
-    rdev, CFDictionaryRef opts, void *callback, void *user_info);
+afc_error_t AFCFileRefTell(
+	afc_connection conn,
+	afc_file_ref ref,
+	uint64_t *offset);
 
-struct am_restore_device *AMRestoreModeDeviceCreate(unsigned int unknown0,
-    unsigned int connection_id, unsigned int unknown1);
+// afc_error_t AFCFileRefLock(afc_connection *conn, afc_file_ref ref,
+//    ...);
+// int _AFCDirectoryAccessIsValid(afc_connection *conn)
 
-unsigned int AMRestoreCreatePathsForBundle(CFStringRef restore_bundle_path,
-    CFStringRef kernel_cache_type, CFStringRef boot_image_type, unsigned int
-    unknown0, CFStringRef *firmware_dir_path, CFStringRef *
-    kernelcache_restore_path, unsigned int unknown1, CFStringRef *
-    ramdisk_path);
+afc_error_t AFCFileRefRead(
+	afc_connection conn,
+	afc_file_ref ref,
+    void *buf,
+	uint32_t *len);
 
-unsigned int AMDeviceGetConnectionID(struct am_device *device);
-mach_error_t AMDeviceEnterRecovery(struct am_device *device);
-mach_error_t AMDeviceDisconnect(struct am_device *device);
-mach_error_t AMDeviceRetain(struct am_device *device);
-mach_error_t AMDeviceRelease(struct am_device *device);
-CFStringRef AMDeviceCopyValue(struct am_device *device, unsigned int, CFStringRef cfstring);
-CFStringRef AMDeviceCopyDeviceIdentifier(struct am_device *device);
+afc_error_t AFCFileRefSetFileSize(
+	afc_connection conn,
+	afc_file_ref ref,
+    uint64_t offset);
 
-typedef void (*notify_callback)(CFStringRef notification, void *data);
+afc_error_t AFCFileRefWrite(
+	afc_connection conn,
+	afc_file_ref ref,
+    const void *buf,
+	uint32_t len);
 
-mach_error_t AMDPostNotification(service_conn_t socket, CFStringRef  notification, CFStringRef userinfo);
-mach_error_t AMDObserveNotification(void *socket, CFStringRef notification);
-mach_error_t AMDListenForNotifications(void *socket, notify_callback cb, void *data);
-mach_error_t AMDShutdownNotificationProxy(void *socket);
-                    
+afc_error_t AFCFileRefClose(
+	afc_connection conn,
+	afc_file_ref ref);
+
+afc_error_t AFCFileInfoOpen(
+	afc_connection conn,
+	const char *path,
+	afc_dictionary *info);
+
+afc_error_t AFCKeyValueRead(
+	afc_dictionary dict,
+	char **key,
+	char **val);
+
+afc_error_t AFCKeyValueClose(
+	afc_dictionary dict);
+
+uint32_t AMDeviceGetConnectionID(am_device device);
+mach_error_t AMDeviceEnterRecovery(am_device device);
+mach_error_t AMDeviceDisconnect(am_device device);
+mach_error_t AMDeviceRetain(am_device device);
+mach_error_t AMDeviceRelease(am_device device);
+
+uint32_t AMDeviceGetInterfaceType(
+	am_device device); // { return 1; }
+
+uint32_t AMDeviceGetInterfaceSpeed(
+	am_device device); // { return 0x78000; }
+
+/* Reads various device settings; returns nil if no value is found for
+ * the nominated key
+ *
+ * Must be balanced by CFRelease()
+ *
+ * Possible values for key:
+ * ActivationState
+ * ActivationStateAcknowledged
+ * BasebandBootloaderVersion
+ * BasebandVersion
+ * BluetoothAddress
+ * BuildVersion
+ * DeviceCertificate
+ * DeviceClass
+ * DeviceName
+ * DevicePublicKey
+ * FirmwareVersion
+ * HostAttached
+ * IntegratedCircuitCardIdentity
+ * InternationalMobileEquipmentIdentity
+ * InternationalMobileSubscriberIdentity
+ * ModelNumber
+ * PhoneNumber
+ * ProductType
+ * ProductVersion
+ * ProtocolVersion
+ * RegionInfo
+ * SBLockdownEverRegisteredKey
+ * SIMStatus
+ * SerialNumber
+ * SomebodySetTimeZone
+ * TimeIntervalSince1970
+ * TimeZone
+ * TimeZoneOffsetFromUTC
+ * TrustedHostAttached
+ * UniqueDeviceID
+ * Uses24HourClock
+ * WiFiAddress
+ * iTunesHasConnected
+ */
+void* AMDeviceCopyValue(
+	am_device device,
+	uint32_t mbz,
+	CFStringRef key);
+
+/*
+ * Returns the udid of the specified device.  The same value is returned
+ * from AMDeviceCopyValue(device,0,"UniqueDeviceID").
+ *
+ * Must be balanced by CFRelease()
+ */
+CFStringRef AMDeviceCopyDeviceIdentifier(
+	am_device device);
+
+mach_error_t AMDShutdownNotificationProxy(
+	void *);
+
 /*edits by geohot*/
-mach_error_t AMDeviceDeactivate(struct am_device *device);
-mach_error_t AMDeviceActivate(struct am_device *device, CFMutableDictionaryRef);
+mach_error_t AMDeviceDeactivate(am_device device);
+mach_error_t AMDeviceActivate(am_device device, CFMutableDictionaryRef);
 /*end*/
 
-void *AMDeviceSerialize(struct am_device *device);
-void AMDAddLogFileDescriptor(int fd);
-//kern_return_t AMDeviceSendMessage(service_conn_t socket, void *unused, CFPropertyListRef plist);
-//kern_return_t AMDeviceReceiveMessage(service_conn_t socket, CFDictionaryRef options, CFPropertyListRef * result);
-
-/* ----------------------------------------------------------------------------
- *   Semi-private routines
- * ------------------------------------------------------------------------- */
-
-/*  Pass in a usbmux_listener_1 structure and a usbmux_listener_2 structure
- *  pointer, which will be filled with the resulting usbmux_listener_2.
- *
- *  Returns:
- *      MDERR_OK                if completed successfully
- *      MDERR_USBMUX_ARG_NULL   if one of the arguments was NULL
- *      MDERR_USBMUX_FAILED     if the listener was not created successfully
- */
-
-usbmux_error_t USBMuxListenerCreate(struct usbmux_listener_1 *esi_fp8, struct
-    usbmux_listener_2 **eax_fp12);
-
-/* ----------------------------------------------------------------------------
- *   Less-documented semi-private routines
- * ------------------------------------------------------------------------- */
-
-usbmux_error_t USBMuxListenerHandleData(void *);
-
-/* ----------------------------------------------------------------------------
- *   Private routines - here be dragons
- * ------------------------------------------------------------------------- */
-
-/* AMRestorePerformRestoreModeRestore() calls this function with a dictionary
- * in order to perform certain special restore operations
- * (RESTORED_OPERATION_*). It is thought that this function might enable
- * significant access to the phone. */
-
-typedef unsigned int (*t_performOperation)(struct am_restore_device *rdev,
-    CFDictionaryRef op); // __attribute__ ((regparm(2)));
+int USBMuxConnectByPort(int connectionID, int iPhone_port_network_byte_order, int* outHandle);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif
